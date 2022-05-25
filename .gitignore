@@ -3,3 +3,4 @@ dist
 bin
 obj
 .env
+*.pdb

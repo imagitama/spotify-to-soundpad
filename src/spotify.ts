@@ -33,5 +33,12 @@ export const getCurrentlyPlayingArtistAndTitle = async (): Promise<string> => {
     return "";
   }
 
-  return result.replace(/[^a-zA-Z0-9 ]/g, "");
+  const resultWithoutLineBreak = result.replace("\r\n", "");
+
+  const cleanedResult = resultWithoutLineBreak.replace(
+    /[^a-zA-Z0-9 \-\\(\)\.']/g,
+    ""
+  );
+
+  return cleanedResult;
 };

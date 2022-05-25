@@ -1,33 +1,29 @@
-import request from "request";
 import { promises as fs } from "fs";
 import path from "path";
-import express, { Express } from "express";
-import open from "open";
-import { create as createYoutubeDl } from "youtube-dl-exec";
-import os from "os";
 import Soundpad from "./soundpad";
 import { getCurrentlyPlayingArtistAndTitle } from "./spotify";
 import { sendPlayPauseKey } from "./windows";
+import { getBestYouTubeVideoId } from "./youtube";
+import {
+  downloadYouTubeId,
+  setupYouTubeDownloader,
+  songDownloadPath,
+} from "./download-youtube";
+import { getIfFileExists } from "./utils";
 
 require("dotenv").config();
-
-const youtubeApiKey = process.env.YOUTUBE_API_KEY;
-const songDownloadPath = path.resolve(
-  os.homedir(),
-  "Music/spotify-to-soundpad"
-);
 
 if (!process.env.APPDATA) {
   throw new Error("No app data");
 }
 
-if (!youtubeApiKey) {
-  throw new Error("No youtube api key");
-}
-
 const pathToConfig = path.resolve(
   process.env.APPDATA,
   "spotify-to-soundpad/config.json"
+);
+const pathToLogFile = path.resolve(
+  process.env.APPDATA,
+  "spotify-to-soundpad/log.txt"
 );
 
 interface Config {
@@ -58,91 +54,6 @@ const pauseSpotify = async () => {
 };
 
 let lastKnownArtistAndTitle = "";
-const youtubeApiBaseUrl = "https://www.googleapis.com/youtube/v3";
-
-const getBestYouTubeVideoId = async (searchTerm: string): Promise<string> => {
-  console.debug(`Querying youtube...`, { searchTerm, youtubeApiKey });
-
-  const cleanSearchTerm = encodeURIComponent(searchTerm);
-  const url = `${youtubeApiBaseUrl}/search?part=snippet&maxResults=1&order=relevance&q=${cleanSearchTerm}&type=video&videoDefinition=high&key=${youtubeApiKey}`;
-
-  return new Promise((resolve, reject) => {
-    var options = {
-      url,
-      json: true,
-    };
-
-    request.get(options, function (error, response, body) {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      if (body.error) {
-        reject(new Error(`${body.error.code}: ${body.error.message}`));
-        return;
-      }
-
-      if (!body.items.length) {
-        reject(new Error("No youtube videos found!"));
-        return;
-      }
-
-      const bestResultId = body.items[0].id.videoId;
-
-      console.debug(`Found best result: ${bestResultId}`);
-
-      resolve(bestResultId);
-    });
-  });
-};
-
-const getIfFileExists = async (filePath: string): Promise<boolean> => {
-  try {
-    await fs.stat(filePath);
-    return true;
-  } catch (err: any) {
-    if (err.code && err.code === "ENOENT") {
-      return false;
-    } else {
-      throw err;
-    }
-  }
-};
-
-const downloadYouTubeId = async (
-  videoId: string,
-  filenameWithoutExt: string
-): Promise<string> => {
-  const outputPath = path.resolve(
-    songDownloadPath,
-    `${filenameWithoutExt}.mp3`
-  );
-
-  console.debug(`Downloading youtube id ${videoId} to ${outputPath}...`);
-
-  await fs.mkdir(path.dirname(outputPath), { recursive: true });
-
-  if (await getIfFileExists(outputPath)) {
-    console.debug(`File already existings - skipping download`);
-    return outputPath;
-  }
-
-  // defaults to 128kb
-  await youtubedl(`https://www.youtube.com/watch?v=${videoId}`, {
-    output: outputPath,
-    noWarnings: true,
-    callHome: false,
-    noCheckCertificate: true,
-    preferFreeFormats: true,
-    youtubeSkipDashManifest: true,
-    referer: `https://www.youtube.com/watch?v=${videoId}`,
-    extractAudio: true,
-    audioFormat: "mp3",
-  });
-
-  return outputPath;
-};
 
 const playNewSong = async (artistAndTitle: string): Promise<void> => {
   const existingFilePath = path.resolve(
@@ -235,24 +146,18 @@ const syncWithSpotify = async () => {
 };
 
 const start = async () => {
-  try {
-    console.debug(`Starting the loop...`);
+  console.debug(`Starting the loop...`);
 
-    setInterval(() => {
-      syncWithSpotify();
-    }, 500);
+  setInterval(async () => {
+    try {
+      await syncWithSpotify();
+    } catch (err) {
+      console.error(err);
+      handleError(err);
+    }
+  }, 500);
 
-    syncWithSpotify();
-  } catch (err) {
-    console.error(err);
-    process.exit(1);
-  }
-};
-
-let youtubedl: ReturnType<typeof createYoutubeDl>;
-
-const setupYouTubeDownloader = () => {
-  youtubedl = createYoutubeDl(path.resolve(__dirname, "yt-dlp.exe"));
+  await syncWithSpotify();
 };
 
 const setupSoundpad = async () => {
@@ -273,6 +178,12 @@ const setupSoundpad = async () => {
   console.debug(`Found ${sounds.length} Soundpad sounds`);
 };
 
+const handleError = async (err: any) => {
+  const contents = typeof err === "object" ? err.message : err.toString();
+  await fs.mkdir(path.dirname(pathToLogFile), { recursive: true });
+  await fs.appendFile(pathToLogFile, contents);
+};
+
 const main = async () => {
   try {
     console.log("Starting up...");
@@ -282,9 +193,10 @@ const main = async () => {
     await setupSoundpad();
 
     await start();
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    process.exit(1);
+    handleError(err);
+    // process.exit(1);
   }
 };
 

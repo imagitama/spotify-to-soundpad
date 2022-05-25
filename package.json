@@ -1,14 +1,15 @@
 {
   "name": "spotify-to-soundpad",
-  "version": "1.0.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "An app for synchronizing Spotify with Soundpad.",
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/main.ts",
     "build:cs": "dotnet publish src/SendPlayPause -o SendPlayPause",
-    "build:ts": "dotenv tsc src",
-    "build:exe": "nexe",
-    "build": "npm run build:cs && npm run build:ts && npm run build:exe"
+    "build:ts": "tsc",
+    "build:exe": "node scripts/build-exe.js",
+    "copyassets": "node scripts/copyassets.js",
+    "build": "npm run build:cs && npm run build:ts && npm run build:exe && npm run copyassets"
   },
   "author": "",
   "license": "ISC",
@@ -18,6 +19,7 @@
     "@types/request": "^2.48.8",
     "@types/xml2js": "^0.4.11",
     "@types/yargs": "^17.0.10",
+    "archiver": "^5.3.1",
     "nexe": "^4.0.0-rc.1",
     "prettier": "^2.6.2",
     "ts-node": "^10.8.0",
