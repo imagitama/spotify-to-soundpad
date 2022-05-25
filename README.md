@@ -9,6 +9,12 @@ It periodically checks what is playing in Spotify and if it changes it will auto
 - dumps MP3 files into Music folder
 - strips out weird characters from filenames
 
+# Issues
+
+## Spotify next track isnt played
+
+In spotify go to settings and uncheck "Show desktop overlay when using media keys"
+
 # Development
 
 1. enable "youtube data api" in google cloud console

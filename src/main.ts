@@ -3,12 +3,17 @@ import path from "path";
 import {
   connect as connectToSoundpad,
   getAllSounds,
+  getIsPlaying as getIsPlayingInSoundpad,
+  getPlaybackDurationInMs,
+  getPlaybackPositionInMs,
   pause as pauseSoundpad,
-  playSoundAtIndex,
   playSoundFile,
 } from "./soundpad";
-import { getCurrentlyPlayingArtistAndTitle } from "./spotify";
-import { sendPlayPauseKey } from "./windows";
+import {
+  getCurrentlyPlayingArtistAndTitle,
+  playNextSong as playNextSongInSpotify,
+  pause as pauseSpotify,
+} from "./spotify";
 import { getBestYouTubeVideoId } from "./youtube";
 import {
   downloadYouTubeId,
@@ -23,41 +28,36 @@ if (!process.env.APPDATA) {
   throw new Error("No app data");
 }
 
-const pathToConfig = path.resolve(
-  process.env.APPDATA,
-  "spotify-to-soundpad/config.json"
-);
+// const pathToConfig = path.resolve(
+//   process.env.APPDATA,
+//   "spotify-to-soundpad/config.json"
+// );
 const pathToLogFile = path.resolve(
   process.env.APPDATA,
   "spotify-to-soundpad/log.txt"
 );
 
-interface Config {
-  access_token: string;
-}
+// interface Config {
+//   access_token: string;
+// }
 
-const readConfig = async (): Promise<Config> => {
-  try {
-    const configJsonBuffer = await fs.readFile(pathToConfig);
-    const config = JSON.parse(configJsonBuffer.toString());
-    return config;
-  } catch (err) {
-    return {
-      access_token: "",
-    };
-  }
-};
+// const readConfig = async (): Promise<Config> => {
+//   try {
+//     const configJsonBuffer = await fs.readFile(pathToConfig);
+//     const config = JSON.parse(configJsonBuffer.toString());
+//     return config;
+//   } catch (err) {
+//     return {
+//       access_token: "",
+//     };
+//   }
+// };
 
-const writeConfig = async (newConfig: Config): Promise<void> => {
-  await fs.mkdir(path.dirname(pathToConfig), { recursive: true });
-  const json = JSON.stringify(newConfig, null, "  ");
-  await fs.writeFile(pathToConfig, json);
-};
-
-const pauseSpotify = async () => {
-  console.debug(`Pausing spotify...`);
-  await sendPlayPauseKey();
-};
+// const writeConfig = async (newConfig: Config): Promise<void> => {
+//   await fs.mkdir(path.dirname(pathToConfig), { recursive: true });
+//   const json = JSON.stringify(newConfig, null, "  ");
+//   await fs.writeFile(pathToConfig, json);
+// };
 
 let lastKnownArtistAndTitle = "";
 
@@ -100,11 +100,13 @@ const syncWithSpotify = async () => {
     await pauseSoundpad();
 
     await playNewSong(lastKnownArtistAndTitle);
+
+    isQueuingNextSong = false;
   }
 };
 
 const start = async () => {
-  console.debug(`Starting the loop...`);
+  console.debug(`Waiting for Spotify...`);
 
   setInterval(async () => {
     try {
@@ -115,7 +117,43 @@ const start = async () => {
     }
   }, 500);
 
-  await syncWithSpotify();
+  syncWithSpotify();
+
+  setInterval(async () => {
+    try {
+      await syncWithSoundpad();
+    } catch (err) {
+      console.error(err);
+      handleError(err);
+    }
+  }, 500);
+
+  syncWithSoundpad();
+};
+
+let isQueuingNextSong = false;
+const msRemainingBeforeQueueNextSong = 1000;
+
+const syncWithSoundpad = async () => {
+  if (!(await getIsPlayingInSoundpad())) {
+    return;
+  }
+
+  const positionMs = await getPlaybackPositionInMs();
+  const durationMs = await getPlaybackDurationInMs();
+
+  const msRemaining = durationMs - positionMs;
+
+  if (
+    msRemaining < msRemainingBeforeQueueNextSong &&
+    isQueuingNextSong === false
+  ) {
+    console.debug(`Nearing end of current song, queuing up next song...`);
+
+    isQueuingNextSong = true;
+
+    await playNextSongInSpotify();
+  }
 };
 
 const setupSoundpad = async () => {
@@ -146,7 +184,7 @@ const main = async () => {
   } catch (err: any) {
     console.error(err);
     handleError(err);
-    // process.exit(1);
+    process.exit(1);
   }
 };
 

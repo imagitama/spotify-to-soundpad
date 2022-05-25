@@ -3,6 +3,8 @@ import net from "net";
 import path from "path";
 import { delay, removeExtension } from "./utils";
 
+// full list of commands: https://www.leppsoft.com/soundpad/files/rc/SoundpadRemoteControl.java
+
 let pipe: undefined | net.Socket;
 let isConnected = false;
 
@@ -58,16 +60,26 @@ const sendRequest = async <TResult>(request: string): Promise<TResult> => {
         return;
       }
 
-      const statusCode = stringResult.replace("R-", "");
+      if (stringResult[0] === "R") {
+        const statusCode = stringResult.replace("R-", "");
 
-      switch (statusCode) {
-        case "200":
-        case "204":
-          resolve(undefined as unknown as TResult);
-          break;
-        default:
-          reject(new Error(`Soundpad result was ${statusCode}`));
+        switch (statusCode) {
+          case "200":
+          case "204":
+            resolve(undefined as unknown as TResult);
+            break;
+          default:
+            reject(new Error(`Soundpad result was ${statusCode}`));
+        }
       }
+
+      if (!Number.isNaN(Number(stringResult))) {
+        const numberResult = parseInt(stringResult);
+        resolve(numberResult as unknown as TResult);
+        return;
+      }
+
+      resolve(stringResult as unknown as TResult);
     });
   });
 };
@@ -172,4 +184,23 @@ export const getAllSounds = async (): Promise<NativeSound[]> => {
 
 export const pause = async (): Promise<void> => {
   await sendRequest("DoStopSound()");
+};
+
+export const getPlaybackDurationInMs = async (): Promise<number> =>
+  await sendRequest<number>("GetPlaybackDurationInMs()");
+export const getPlaybackPositionInMs = async (): Promise<number> =>
+  await sendRequest<number>("GetPlaybackPositionInMs()");
+
+export enum PlayStatus {
+  STOPPED = "STOPPED",
+  PLAYING = "PLAYING",
+  PAUSED = "PAUSED",
+  SEEKING = "SEEKING",
+}
+
+export const getPlayStatus = async (): Promise<PlayStatus> =>
+  sendRequest<PlayStatus>("GetPlayStatus()");
+
+export const getIsPlaying = async () => {
+  return (await getPlayStatus()) === PlayStatus.PLAYING;
 };

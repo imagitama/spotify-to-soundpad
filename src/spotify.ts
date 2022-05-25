@@ -1,4 +1,5 @@
 import { exec } from "child_process";
+import { sendNextTrackKey, sendPlayPauseKey } from "./windows";
 
 export const getCurrentlyPlayingArtistAndTitle = async (): Promise<string> => {
   const result = await new Promise(
@@ -41,4 +42,14 @@ export const getCurrentlyPlayingArtistAndTitle = async (): Promise<string> => {
   );
 
   return cleanedResult;
+};
+
+export const pause = async () => {
+  console.debug(`Pausing Spotify`);
+  await sendPlayPauseKey();
+};
+
+export const playNextSong = async () => {
+  console.debug(`Playing next song in Spotify`);
+  await sendNextTrackKey();
 };
