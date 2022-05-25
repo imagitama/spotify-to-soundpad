@@ -1,0 +1,37 @@
+{
+  "name": "spotify-to-soundpad",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon src/main.ts",
+    "build:cs": "dotnet publish src/SendPlayPause -o SendPlayPause",
+    "build:ts": "dotenv tsc src",
+    "build:exe": "nexe",
+    "build": "npm run build:cs && npm run build:ts && npm run build:exe"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/register": "^7.17.7",
+    "@types/express": "^4.17.13",
+    "@types/request": "^2.48.8",
+    "@types/xml2js": "^0.4.11",
+    "@types/yargs": "^17.0.10",
+    "nexe": "^4.0.0-rc.1",
+    "prettier": "^2.6.2",
+    "ts-node": "^10.8.0",
+    "typescript": "^4.6.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "nodemon": "^2.0.16",
+    "open": "^8.4.0",
+    "request": "^2.88.2",
+    "soundpad": "github:mcpe-pc/soundpad.js",
+    "xml2js": "^0.4.23",
+    "yargs": "^17.5.1",
+    "youtube-dl-exec": "^2.0.12"
+  }
+}
