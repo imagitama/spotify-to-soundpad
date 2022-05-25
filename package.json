@@ -1,6 +1,6 @@
 {
   "name": "spotify-to-soundpad",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An app for synchronizing Spotify with Soundpad.",
   "main": "index.js",
   "scripts": {

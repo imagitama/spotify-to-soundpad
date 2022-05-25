@@ -166,7 +166,11 @@ const setupSoundpad = async () => {
 const handleError = async (err: any) => {
   const contents = typeof err === "object" ? err.message : err.toString();
   await fs.mkdir(path.dirname(pathToLogFile), { recursive: true });
-  await fs.appendFile(pathToLogFile, contents);
+  await fs.appendFile(
+    pathToLogFile,
+    `
+${contents}`
+  );
 };
 
 const main = async () => {

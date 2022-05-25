@@ -61,7 +61,8 @@ const sendRequest = async <TResult>(request: string): Promise<TResult> => {
       }
 
       if (stringResult[0] === "R") {
-        const statusCode = stringResult.replace("R-", "");
+        // note status code can be R-200 or R-200STOPPED
+        const statusCode = stringResult.replace("R-", "").substring(0, 3);
 
         switch (statusCode) {
           case "200":
