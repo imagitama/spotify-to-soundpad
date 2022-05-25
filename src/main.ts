@@ -1,6 +1,12 @@
 import { promises as fs } from "fs";
 import path from "path";
-import Soundpad from "./soundpad";
+import {
+  connect as connectToSoundpad,
+  getAllSounds,
+  pause as pauseSoundpad,
+  playSoundAtIndex,
+  playSoundFile,
+} from "./soundpad";
 import { getCurrentlyPlayingArtistAndTitle } from "./spotify";
 import { sendPlayPauseKey } from "./windows";
 import { getBestYouTubeVideoId } from "./youtube";
@@ -63,7 +69,7 @@ const playNewSong = async (artistAndTitle: string): Promise<void> => {
 
   if (await getIfFileExists(existingFilePath)) {
     console.debug(`Existing mp3 exists, playing it...`);
-    await playMp3InSoundpad(existingFilePath, artistAndTitle);
+    await playSoundFile(existingFilePath);
     return;
   }
 
@@ -74,55 +80,7 @@ const playNewSong = async (artistAndTitle: string): Promise<void> => {
 
   const result = await downloadYouTubeId(youtubeVideoId, artistAndTitle);
 
-  await playMp3InSoundpad(result, artistAndTitle);
-};
-
-const pauseSoundpad = async () => {
-  Soundpad.pause();
-};
-
-const delay = async (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
-
-const playMp3InSoundpad = async (
-  mp3Path: string,
-  title: string
-): Promise<void> => {
-  console.debug(`Playing mp3 file in soundpad... ${mp3Path}`);
-
-  const originalSounds = await Soundpad.getSoundsAsync();
-
-  if (!originalSounds) {
-    throw new Error("No sounds found!");
-  }
-
-  const filenameWithoutExt = path.basename(mp3Path).replace(".mp3", "");
-
-  const match = originalSounds.find(
-    (sound) => sound.$.title === filenameWithoutExt
-  );
-
-  if (match) {
-    console.debug(`Sound already in Soundpad, playing...`);
-    Soundpad.playSound(match.$.index);
-    return;
-  }
-
-  console.debug(`Adding sound to Soundpad...`);
-
-  const originalSoundCount = originalSounds.length;
-
-  await Soundpad.addSound(mp3Path, title);
-
-  // we dont actually know if it was successful (thanks soundpad)
-  await delay(500);
-
-  // pray they havent added a sound in this delay!
-  const soundIndex = originalSoundCount + 1;
-
-  console.debug(`Playing sound ${soundIndex}`);
-
-  await Soundpad.playSound(soundIndex);
+  await playSoundFile(result);
 };
 
 const syncWithSpotify = async () => {
@@ -163,17 +121,9 @@ const start = async () => {
 const setupSoundpad = async () => {
   console.debug(`Connecting to Soundpad...`);
 
-  const connected = await Soundpad.connectAsync();
+  await connectToSoundpad();
 
-  if (!connected) {
-    throw new Error("Failed to connect to Soundpad! Is it running?");
-  }
-
-  const sounds = await Soundpad.getSoundsAsync();
-
-  if (!sounds) {
-    throw new Error("No sounds found!");
-  }
+  const sounds = await getAllSounds();
 
   console.debug(`Found ${sounds.length} Soundpad sounds`);
 };

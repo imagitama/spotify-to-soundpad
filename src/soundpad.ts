@@ -1,11 +1,148 @@
-// https://github.com/sonodima/soundpad-web/blob/main/lib/Soundpad.ts
-
-import net from "net";
-import { type } from "os";
-
 import xml from "xml2js";
+import net from "net";
+import path from "path";
+import { delay, removeExtension } from "./utils";
 
-type NativeSound = {
+let pipe: undefined | net.Socket;
+let isConnected = false;
+
+export const connect = async (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    pipe = net.createConnection("\\\\.\\pipe\\sp_remote_control", () => {
+      isConnected = true;
+      resolve();
+    });
+
+    pipe.on("error", (error) => {
+      pipe = undefined;
+      isConnected = false;
+      reject(error);
+    });
+
+    pipe.on("close", () => {
+      isConnected = false;
+      pipe = undefined;
+    });
+
+    pipe.on("end", () => {
+      isConnected = false;
+      pipe = undefined;
+    });
+
+    pipe.on("timeout", () => {
+      isConnected = false;
+      pipe = undefined;
+    });
+  });
+};
+
+const sendRequest = async <TResult>(request: string): Promise<TResult> => {
+  return new Promise((resolve, reject) => {
+    if (!isConnected || !pipe) {
+      reject(new Error("Not connected"));
+      return;
+    }
+
+    pipe.write(request);
+
+    pipe.once("data", (buffer) => {
+      //   if (request !== "GetSoundlist()") {
+      // console.debug(`sendRequest ${request} ${buffer.toString()}`);
+      //   }
+
+      const stringResult = buffer.toString();
+
+      if (stringResult[0] === "<") {
+        const xmlResult = xml.parseStringPromise(stringResult);
+        resolve(xmlResult);
+        return;
+      }
+
+      const statusCode = stringResult.replace("R-", "");
+
+      switch (statusCode) {
+        case "200":
+        case "204":
+          resolve(undefined as unknown as TResult);
+          break;
+        default:
+          reject(new Error(`Soundpad result was ${statusCode}`));
+      }
+    });
+  });
+};
+
+const getSongTitleByPath = (pathToSoundFile: string) =>
+  path.basename(removeExtension(pathToSoundFile));
+
+export const playSoundFile = async (pathToSoundFile: string): Promise<void> => {
+  const sounds = await getAllSounds();
+
+  const songTitle = getSongTitleByPath(pathToSoundFile);
+
+  const existingSound = sounds.find((sound) => sound.title === songTitle);
+  let index;
+
+  if (existingSound) {
+    index = existingSound.index;
+  } else {
+    index = await addSoundFile(pathToSoundFile);
+  }
+
+  await playSoundAtIndex(index);
+};
+
+export const addSoundFile = async (
+  pathToSoundFile: string
+): Promise<number> => {
+  console.debug(`Adding sound file ${pathToSoundFile} to Soundpad...`);
+
+  await sendRequest(`DoAddSound(${pathToSoundFile})`);
+
+  const title = getSongTitleByPath(pathToSoundFile);
+  const index = await waitForSoundIndexByTitle(title);
+
+  if (index === 0) {
+    throw new Error(`Cannot find sound by title ${title} `);
+  }
+
+  return index;
+};
+
+const waitForSoundIndexByTitle = async (title: string): Promise<number> => {
+  const sounds = await getAllSounds();
+
+  const existingSound = sounds.find((sound) => sound.title === title);
+
+  if (existingSound) {
+    return existingSound.index;
+  }
+
+  // takes a moment to actually update
+  // TODO: Keep polling until it is there
+  await delay(100);
+
+  return waitForSoundIndexByTitle(title);
+};
+
+const getSoundIndexByTitle = async (title: string): Promise<number> => {
+  const sounds = await getAllSounds();
+
+  const existingSound = sounds.find((sound) => sound.title === title);
+
+  if (existingSound) {
+    return existingSound.index;
+  }
+
+  return 0;
+};
+
+export const playSoundAtIndex = async (soundIndex: number): Promise<void> => {
+  console.debug(`Playing sound ${soundIndex} in Soundpad...`);
+  await sendRequest(`DoPlaySound(${soundIndex})`);
+};
+
+interface NativeSound {
   index: number;
   url: string;
   artist: string;
@@ -14,7 +151,7 @@ type NativeSound = {
   addedOn: string;
   lastPlayedOn: string;
   playCount: number;
-};
+}
 
 type NativeSoundParent = {
   $: NativeSound;
@@ -28,106 +165,11 @@ type SoundlistResponse = {
   Soundlist: NativeSoundlist;
 };
 
-class Soundpad {
-  private _pipe?: net.Socket;
-  connected: boolean;
+export const getAllSounds = async (): Promise<NativeSound[]> => {
+  const result = await sendRequest<SoundlistResponse>("GetSoundlist()");
+  return result.Soundlist.Sound.map((nativeSound) => nativeSound.$);
+};
 
-  constructor() {
-    this.connected = false;
-  }
-
-  connectAsync(): Promise<boolean> {
-    return new Promise((resolve) => {
-      this._pipe = net.createConnection(
-        "\\\\.\\pipe\\sp_remote_control",
-        () => {
-          this.connected = true;
-          resolve(true);
-        }
-      );
-
-      this._pipe.on("error", (error) => {
-        this._pipe = undefined;
-        this.connected = false;
-        // console.error(error);
-        resolve(false);
-      });
-
-      this._pipe.on("close", () => {
-        this.connected = false;
-        this._pipe = undefined;
-      });
-
-      this._pipe.on("end", () => {
-        this.connected = false;
-        this._pipe = undefined;
-      });
-
-      this._pipe.on("timeout", () => {
-        this.connected = false;
-        this._pipe = undefined;
-      });
-    });
-  }
-
-  private async requestAsync(request: string): Promise<Buffer | undefined> {
-    if (!this.connected || this._pipe == undefined) {
-      console.error("Pipe is not ready");
-      return undefined;
-    }
-
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(undefined), 1000);
-
-      this._pipe?.write(request);
-      this._pipe?.once("data", (buffer) => {
-        resolve(buffer);
-      });
-    });
-  }
-
-  async getSoundsAsync(): Promise<null | undefined | NativeSoundParent[]> {
-    const response = await this.requestAsync("GetSoundlist()");
-    if (response != undefined) {
-      // not sure why it returns a HTTP status code but w/e
-      if (response.toString() === "R-200") {
-        return this.getSoundsAsync();
-      }
-
-      const parsed = (await xml.parseStringPromise(
-        response
-      )) as SoundlistResponse;
-
-      return parsed.Soundlist.Sound;
-    }
-  }
-
-  playSound(id: number) {
-    return this.requestAsync(`DoPlaySound(${id})`);
-  }
-
-  // NEW STUFF
-
-  async addSound(soundPath: string, title: string) {
-    await this.requestAsync(`DoAddSound(${soundPath})`);
-
-    // now wait for the change to happen
-    await new Promise((resolve) => {
-      setInterval(async () => {
-        const sounds = await this.getSoundsAsync();
-
-        if (sounds && sounds.find((sound) => sound.$.title === title)) {
-          resolve(true);
-        }
-      }, 100);
-    });
-  }
-
-  pause() {
-    return this.requestAsync(`DoStopSound()`);
-  }
-}
-
-let soundpad = new Soundpad();
-
-export default soundpad;
+export const pause = async (): Promise<void> => {
+  await sendRequest("DoStopSound()");
+};
