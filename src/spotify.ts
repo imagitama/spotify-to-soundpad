@@ -8,6 +8,11 @@ export const getCurrentlyPlayingArtistAndTitle = async (): Promise<string> => {
         { shell: "powershell.exe" },
         (err, stdout, stderr) => {
           if (err) {
+            if (err.message.includes("Cannot find a process with the name")) {
+              reject(new Error("Failed to detect Spotify. Is it running?"));
+              return;
+            }
+
             reject(err);
             return;
           }
@@ -23,7 +28,7 @@ export const getCurrentlyPlayingArtistAndTitle = async (): Promise<string> => {
     }
   );
 
-  // "Spotify" or "Spotify Premium"
+  // if not playing it is "Spotify" or "Spotify Premium"
   if (result.includes("Spotify")) {
     return "";
   }

@@ -49,7 +49,7 @@ class Soundpad {
       this._pipe.on("error", (error) => {
         this._pipe = undefined;
         this.connected = false;
-        console.error(error);
+        // console.error(error);
         resolve(false);
       });
 

@@ -258,7 +258,11 @@ const setupYouTubeDownloader = () => {
 const setupSoundpad = async () => {
   console.debug(`Connecting to Soundpad...`);
 
-  await Soundpad.connectAsync();
+  const connected = await Soundpad.connectAsync();
+
+  if (!connected) {
+    throw new Error("Failed to connect to Soundpad! Is it running?");
+  }
 
   const sounds = await Soundpad.getSoundsAsync();
 
