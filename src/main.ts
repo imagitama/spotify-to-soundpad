@@ -14,9 +14,8 @@ import {
   playNextSong as playNextSongInSpotify,
   pause as pauseSpotify,
 } from "./spotify";
-import { getBestYouTubeVideoId } from "./youtube";
 import {
-  downloadYouTubeId,
+  downloadYouTubeBySearch,
   setupYouTubeDownloader,
   songDownloadPath,
 } from "./download-youtube";
@@ -76,9 +75,7 @@ const playNewSong = async (artistAndTitle: string): Promise<void> => {
   // hardcode "lyrics" here to reduce video size
   const searchTerm = `${artistAndTitle} lyrics`;
 
-  const youtubeVideoId = await getBestYouTubeVideoId(searchTerm);
-
-  const result = await downloadYouTubeId(youtubeVideoId, artistAndTitle);
+  const result = await downloadYouTubeBySearch(searchTerm, artistAndTitle);
 
   await playSoundFile(result);
 };

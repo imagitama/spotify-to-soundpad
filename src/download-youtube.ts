@@ -12,7 +12,43 @@ export const songDownloadPath = path.resolve(
 let youtubedl: ReturnType<typeof createYoutubeDl>;
 
 export const setupYouTubeDownloader = () => {
-  youtubedl = createYoutubeDl(path.resolve(__dirname, "yt-dlp.exe"));
+  youtubedl = createYoutubeDl(path.resolve(__dirname, "../yt-dlp.exe"));
+};
+
+export const downloadYouTubeBySearch = async (
+  searchTerm: string,
+  outputFileNameWithoutExt: string
+) => {
+  const outputPath = path.resolve(
+    songDownloadPath,
+    `${outputFileNameWithoutExt}.mp3`
+  );
+
+  console.debug(
+    `Downloading youtube by searching "${searchTerm}" to ${outputPath}...`
+  );
+
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+
+  if (await getIfFileExists(outputPath)) {
+    console.debug(`File already existings - skipping download`);
+    return outputPath;
+  }
+
+  // defaults to 128kb
+  await youtubedl(`ytsearch1:${searchTerm}`, {
+    output: outputPath,
+    noWarnings: true,
+    callHome: false,
+    noCheckCertificate: true,
+    preferFreeFormats: true,
+    youtubeSkipDashManifest: true,
+    // referer: `https://www.youtube.com/watch?v=${videoId}`,
+    extractAudio: true,
+    audioFormat: "mp3",
+  });
+
+  return outputPath;
 };
 
 export const downloadYouTubeId = async (

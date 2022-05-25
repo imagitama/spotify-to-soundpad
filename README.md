@@ -17,9 +17,7 @@ In spotify go to settings and uncheck "Show desktop overlay when using media key
 
 # Development
 
-1. enable "youtube data api" in google cloud console
-2. create credentials (public data) and copy the API key
-3. install python 3.10 from windows store (run `python` command in terminal)
+1. install python 3.10 from windows store (run `python` command in terminal)
 
 ## Building with NEXE
 
