@@ -1,3 +1,7 @@
+# 0.0.5
+
+- fix ffmpeg error
+
 # 0.0.4
 
 - fix 200STOPPED bug

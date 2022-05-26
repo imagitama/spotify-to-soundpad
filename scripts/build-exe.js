@@ -5,8 +5,8 @@ const fs = require("fs");
 
 const { version } = require(path.resolve(__dirname, "../package.json"));
 
-const pathToAllBins = path.resolve(__dirname, "../bin");
-const pathToBin = path.resolve(__dirname, "../bin", version);
+const pathToBuilds = path.resolve(__dirname, "../build");
+const pathToThisBuild = path.resolve(__dirname, "../build", version);
 
 nexe
   .compile({
@@ -14,11 +14,13 @@ nexe
     build: true,
     verbose: true,
     resources: [".env"],
-    output: path.resolve(pathToBin, "spotify-to-soundpad.exe"),
+    output: path.resolve(pathToThisBuild, "spotify-to-soundpad.exe"),
+    ico: path.resolve(__dirname, "../assets/icon.ico"),
+    name: "Spotify To Soundpad",
   })
   .then(() => {
     const output = fs.createWriteStream(
-      path.resolve(pathToAllBins, `spotify-to-soundpad ${version}.zip`)
+      path.resolve(pathToBuilds, `spotify-to-soundpad ${version}.zip`)
     );
 
     const archive = archiver("zip", {
@@ -40,7 +42,7 @@ nexe
       process.exit(0);
     });
 
-    archive.directory(pathToBin, false);
+    archive.directory(pathToThisBuild, false);
 
     archive.finalize();
   })

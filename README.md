@@ -18,19 +18,5 @@ In spotify go to settings and uncheck "Show desktop overlay when using media key
 # Development
 
 1. install python 3.10 from windows store (run `python` command in terminal)
-
-## Building with NEXE
-
-NEXE is old and you will have to build it yourself using `--build`.
-
-If you get an error run the command with `--verbose`.
-
-You might get an error about NASM. Download it [here](https://www.nasm.us/pub/nasm/releasebuilds/2.15.04/win64/).
-
-## C# app
-
-Needed for sending play/pause commands for Spotify.
-
-## YouTube Downloading
-
-`youtube-dl` is too slow. Using `yt-dlp` which is a faster fork.
+2. download `yt-dlp.exe` (v2022.05.18) and `ffmpeg.exe` (4.2.3) and place into `bin` directory in root
+3. run `build:cs` command to build the C# app
