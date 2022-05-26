@@ -34,7 +34,7 @@ nexe
     archive.pipe(output);
 
     output.on("close", function () {
-      console.log(archive.pointer() + " total bytes");
+      console.log(archive.pointer() / 1000 + " total kb");
       console.log(
         "archiver has been finalized and the output file descriptor has closed."
       );

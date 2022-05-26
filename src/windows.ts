@@ -10,7 +10,7 @@ export const sendCommand = async (command: string): Promise<void> => {
         : path.resolve("./bin/SendPlayPause/SendPlayPause.exe");
 
     exec(
-      `${binaryPath} ${command}`,
+      `& "${binaryPath}" ${command}`,
       { shell: "powershell.exe" },
       (err, stdout, stderr) => {
         if (err) {

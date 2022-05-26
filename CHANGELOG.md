@@ -1,3 +1,7 @@
+# 0.0.6
+
+- fixed space in command
+
 # 0.0.5
 
 - fix ffmpeg error
