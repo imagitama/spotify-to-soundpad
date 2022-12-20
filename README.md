@@ -1,5 +1,7 @@
 # Spotify to Soundpad
 
+**You must have Soundpad and Spotify running BEFORE launching this software!**
+
 A Node.js CLI application for synchronizing [Spotify](https://www.spotify.com/au/) with [Soundpad](https://leppsoft.com/soundpad/en/).
 
 It periodically checks what is playing in Spotify and if it changes it will automatically pause Spotify, download an MP3 of the song from YouTube, add it to Soundpad and play it.
