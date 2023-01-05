@@ -10,9 +10,11 @@
     "build:cs": "dotnet publish src/SendPlayPause -o bin/SendPlayPause",
     "build:main": "tsc",
     "build:renderer": "esbuild src/renderer/index.tsx --bundle --outfile=dist/renderer/index.js && (xcopy \"public\\index.html\" \"dist\\renderer\\index.html*\" /Y)",
+    "check:renderer": "tsc --project tsconfig.renderer.json --noEmit",
     "copyassets": "node scripts/copyassets.js",
     "build": "npm run build:cs && npm run build:main && npm run build:renderer",
-    "package": "electron-builder --win portable"
+    "package": "electron-builder --win portable",
+    "package:fast": "electron-builder --win portable -c.asar=false -c.compression=store"
   },
   "license": "ISC",
   "devDependencies": {
@@ -56,17 +58,19 @@
   },
   "build": {
     "files": [
-      "bin",
       "dist"
     ],
-    "compression": "store",
+    "compression": "normal",
     "directories": {
       "output": "release",
       "buildResources": "assets"
     },
-    "asar": false,
+    "asar": true,
     "win": {
       "target": "portable"
-    }
+    },
+    "extraResources": [
+      "bin"
+    ]
   }
 }

@@ -68,3 +68,6 @@ export const playNextSong = async () => {
   console.debug(`Playing next song in Spotify`);
   await sendNextTrackKey();
 };
+
+export const getIsConnected = async (): Promise<boolean> =>
+  (await getCurrentlyPlayingArtistAndTitle()) !== "";

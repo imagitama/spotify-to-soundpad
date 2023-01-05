@@ -2,6 +2,7 @@ import path from "path";
 import os from "os";
 import { promises as fs } from "fs";
 import { create as createYoutubeDl } from "youtube-dl-exec";
+import { app } from "electron";
 import { getIfFileExists } from "./utils";
 
 export const songDownloadPath = path.resolve(
@@ -14,7 +15,13 @@ export const getSongDownloadPath = () => songDownloadPath;
 let youtubedl: ReturnType<typeof createYoutubeDl>;
 
 export const setupYouTubeDownloader = () => {
-  youtubedl = createYoutubeDl(path.resolve(__dirname, "../../bin/yt-dlp.exe"));
+  youtubedl = createYoutubeDl(
+    path.resolve(
+      app.getAppPath(),
+      process.env.NODE_ENV === "development" ? "../../" : "../",
+      "bin/yt-dlp.exe"
+    )
+  );
 };
 
 export const downloadYouTubeBySearch = async (
@@ -48,7 +55,11 @@ export const downloadYouTubeBySearch = async (
     // referer: `https://www.youtube.com/watch?v=${videoId}`,
     extractAudio: true,
     audioFormat: "mp3",
-    ffmpegLocation: path.resolve(__dirname, "../../bin/ffmpeg.exe"),
+    ffmpegLocation: path.resolve(
+      app.getAppPath(),
+      process.env.NODE_ENV === "development" ? "../../" : "../",
+      "bin/ffmpeg.exe"
+    ),
   });
 
   return outputPath;

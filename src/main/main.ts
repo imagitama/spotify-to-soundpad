@@ -1,7 +1,8 @@
 import log from "electron-log";
 import { app } from "electron";
 import showMainWindow from "./window";
-import { setState, Status } from "./store";
+import { SoundpadStatus, SpotifyStatus, Status } from "../shared/store";
+import { setState } from "./store";
 import setupStartup, { setupAndStart } from "./startup";
 import {
   getSongDownloadPath,
@@ -25,14 +26,6 @@ const main = async () => {
     console.log("App is ready");
 
     showMainWindow();
-
-    subscribe("app-ready", () => {
-      publish("new-state", {
-        state: {
-          songDownloadPath: getSongDownloadPath(),
-        },
-      });
-    });
 
     setupYouTubeDownloader();
 

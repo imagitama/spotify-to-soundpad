@@ -9,29 +9,36 @@ let pipe: undefined | net.Socket;
 let isConnected = false;
 
 export const connect = async (): Promise<void> => {
+  console.debug(`Connecting to Soundpad...`);
+
   return new Promise((resolve, reject) => {
     pipe = net.createConnection("\\\\.\\pipe\\sp_remote_control", () => {
+      console.debug(`Connected to Soundpad successfully`);
       isConnected = true;
       resolve();
     });
 
     pipe.on("error", (error) => {
+      console.debug(`Soundpad connection error: ${error.message}`);
       pipe = undefined;
       isConnected = false;
       reject(error);
     });
 
     pipe.on("close", () => {
+      console.debug(`Soundpad connection closed`);
       isConnected = false;
       pipe = undefined;
     });
 
     pipe.on("end", () => {
+      console.debug(`Soundpad connection ended`);
       isConnected = false;
       pipe = undefined;
     });
 
     pipe.on("timeout", () => {
+      console.debug(`Soundpad connection timed out`);
       isConnected = false;
       pipe = undefined;
     });
@@ -201,3 +208,7 @@ export const getPlayStatus = async (): Promise<PlayStatus> =>
 export const getIsPlaying = async () => {
   return (await getPlayStatus()) === PlayStatus.PLAYING;
 };
+
+export const getIsConnecting = () =>
+  isConnected === false && pipe !== undefined;
+export const getIsConnected = () => isConnected;

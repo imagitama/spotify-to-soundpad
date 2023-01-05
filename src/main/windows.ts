@@ -1,13 +1,17 @@
 import { exec } from "child_process";
+import { app } from "electron";
 import path from "path";
 
 // no way to do this natively in nodejs so we have a c# app for it
 export const sendCommand = async (command: string): Promise<void> => {
   await new Promise((resolve, reject) => {
     const binaryPath = path.resolve(
-      __dirname,
-      "../../bin/SendPlayPause/SendPlayPause.exe"
+      app.getAppPath(),
+      process.env.NODE_ENV === "development" ? "../../" : "../",
+      "bin/SendPlayPause/SendPlayPause.exe"
     );
+
+    console.debug(`Sending command ${command} to ${binaryPath}...`);
 
     exec(
       `& "${binaryPath}" ${command}`,

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import path from "path";
-import { ErrorBoundary } from "react-error-boundary";
 import {
   SoundpadStatus,
   SpotifyStatus,
@@ -215,6 +213,7 @@ const App = () => {
   const hydrate = () => forceRerender((currentVal) => currentVal + 1);
 
   useEffect(() => {
+    console.debug(`App is ready`);
     subscribe(() => hydrate());
     publish("app-ready", {});
   }, []);
@@ -222,45 +221,40 @@ const App = () => {
   return (
     <View id="rootView">
       <style>{styleSheet}</style>
-      <ErrorBoundary
-        FallbackComponent={({ error }) => <Text>Error: {error.message}</Text>}
-        onError={(error) => console.error(error)}
-      >
-        <Row>
-          <Heading>Spotify To Soundpad {getAppVersion()}</Heading>
-        </Row>
-        <Row>
-          <Label>Spotify</Label>
-          <Value status={getValueStatusForSpotifyConnection()}>
-            {getSpotifyConnectionStatusLabel()}
-          </Value>
-        </Row>
-        <Row>
-          <Label>Soundpad</Label>
-          <Value status={getValueStatusForSoundpadConnection()}>
-            {getSoundpadConnectionStatusLabel()}
-          </Value>
-        </Row>
-        <Row>
-          <Label>Status</Label>
-          <Value status={getValueStatusForStatus()}>{getStatusAsLabel()}</Value>
-        </Row>
-        <Row>
-          {state.soundpadStatus === SoundpadStatus.failed ||
-          state.spotifyStatus === SpotifyStatus.not_detected ? (
-            <Button onClick={() => retrySetup()}>Retry</Button>
-          ) : (
-            <></>
-          )}
-        </Row>
-        <View id="footer">
-          <Text>
-            New releases:
-            https://github.com/imagitama/spotify-to-soundpad/releases
-          </Text>
-          <Text>Downloading to: {getSongDownloadPath()}</Text>
-        </View>
-      </ErrorBoundary>
+      <Row>
+        <Heading>Spotify To Soundpad {getAppVersion()}</Heading>
+      </Row>
+      <Row>
+        <Label>Spotify</Label>
+        <Value status={getValueStatusForSpotifyConnection()}>
+          {getSpotifyConnectionStatusLabel()}
+        </Value>
+      </Row>
+      <Row>
+        <Label>Soundpad</Label>
+        <Value status={getValueStatusForSoundpadConnection()}>
+          {getSoundpadConnectionStatusLabel()}
+        </Value>
+      </Row>
+      <Row>
+        <Label>Status</Label>
+        <Value status={getValueStatusForStatus()}>{getStatusAsLabel()}</Value>
+      </Row>
+      <Row>
+        {state.soundpadStatus === SoundpadStatus.failed ||
+        state.spotifyStatus === SpotifyStatus.not_detected ? (
+          <Button onClick={() => retrySetup()}>Retry</Button>
+        ) : (
+          <></>
+        )}
+      </Row>
+      <View id="footer">
+        <Text>
+          New releases:
+          https://github.com/imagitama/spotify-to-soundpad/releases
+        </Text>
+        <Text>Downloading to: {getSongDownloadPath() || "(unknown)"}</Text>
+      </View>
     </View>
   );
 };

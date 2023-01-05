@@ -1,35 +1,6 @@
 import { publish } from "./ipc";
+import { State } from "../shared/store";
 
-export enum SpotifyStatus {
-  waiting,
-  not_detected,
-  detected,
-}
-
-export enum SoundpadStatus {
-  waiting,
-  connecting,
-  connected,
-  failed,
-}
-
-export enum Status {
-  waiting,
-  starting_up,
-  downloading_song,
-  playing_song,
-  error,
-}
-
-export interface State {
-  spotifyStatus?: SpotifyStatus;
-  soundpadStatus?: SoundpadStatus;
-  status?: Status;
-  lastErrorMessage?: string;
-  artistAndSongBeingPlayed?: string;
-  artistAndSongBeingDownloaded?: string;
-}
-
-export const setState = (newState: any): void => {
+export const setState = (newState: State): void => {
   publish("new-state", { state: newState });
 };

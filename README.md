@@ -2,7 +2,16 @@
 
 **You must have Soundpad and Spotify running BEFORE launching this software!**
 
-A Node.js CLI application for synchronizing [Spotify](https://www.spotify.com/au/) with [Soundpad](https://leppsoft.com/soundpad/en/).
+A Windows app for synchronizing [Spotify](https://www.spotify.com/au/) with [Soundpad](https://leppsoft.com/soundpad/en/):
+
+![](./assets/screenshot.png)
+
+# How to use it
+
+1. Download the latest `.exe` from the releases page
+2. Open Spotify and play a song
+3. Open Soundpad
+4. Run the `.exe`
 
 It periodically checks what is playing in Spotify and if it changes it will automatically pause Spotify, download an MP3 of the song from YouTube, add it to Soundpad and play it.
 
@@ -25,3 +34,5 @@ In spotify go to settings and uncheck "Show desktop overlay when using media key
 # Ideas
 
 - pre-download songs such as in a playlist to avoid delay
+- fade between songs
+- normalise volume level (some youtube songs are super quiet)

@@ -1,5 +1,6 @@
 import path from "path";
-import { setState, SoundpadStatus, SpotifyStatus, Status } from "./store";
+import { setState } from "./store";
+import { SoundpadStatus, SpotifyStatus, State, Status } from "../shared/store";
 import {
   getIsPlaying as getIsPlayingInSoundpad,
   getPlaybackDurationInMs,
@@ -8,17 +9,24 @@ import {
   playSoundFile,
   connect as connectToSoundpad,
   getAllSounds,
+  getIsConnected as getIsConnectedToSoundpad,
+  getIsConnecting as getIsConnectingToSoundpad,
 } from "./soundpad";
 import {
   getCurrentlyPlayingArtistAndTitle,
   playNextSong as playNextSongInSpotify,
   pause as pauseSpotify,
   connect as connectToSpotify,
+  getIsConnected as getIsConnectedToSpotify,
 } from "./spotify";
-import { downloadYouTubeBySearch, songDownloadPath } from "./download-youtube";
+import {
+  downloadYouTubeBySearch,
+  getSongDownloadPath,
+  songDownloadPath,
+} from "./download-youtube";
 import { getIfFileExists } from "./utils";
 import { handleError } from "./errors";
-import { subscribe } from "./ipc";
+import { publish, subscribe } from "./ipc";
 
 export const setupAndStart = async () => {
   try {
@@ -48,7 +56,7 @@ export const setupAndStart = async () => {
 
 export const setupSoundpad = async () => {
   try {
-    console.debug(`Connecting to Soundpad...`);
+    console.debug(`Setting up Soundpad...`);
 
     setState({
       soundpadStatus: SoundpadStatus.connecting,
@@ -151,13 +159,17 @@ const syncWithSpotify = async () => {
 
     console.debug(`Spotify song detected: ${artistAndTitle}`);
 
-    // TODO: toggle this behavior or provide option to queue up next song
-    await pauseSpotify();
-    await pauseSoundpad();
+    try {
+      await pauseSpotify();
+      await pauseSoundpad();
+      await playNewSong(lastKnownArtistAndTitle);
 
-    await playNewSong(lastKnownArtistAndTitle);
-
-    isQueuingNextSong = false;
+      isQueuingNextSong = false;
+    } catch (err) {
+      console.error(err);
+      handleError(err as Error);
+      return;
+    }
   }
 };
 
@@ -231,5 +243,30 @@ export default () => {
       console.error(err);
       handleError(err as Error);
     }
+  });
+
+  subscribe("app-ready", async () => {
+    console.debug(`Renderer has told us they are ready`);
+
+    const initialState: State = {
+      spotifyStatus: (await getIsConnectedToSpotify())
+        ? SpotifyStatus.detected
+        : SpotifyStatus.not_detected,
+      soundpadStatus: getIsConnectedToSoundpad()
+        ? SoundpadStatus.connected
+        : getIsConnectingToSoundpad()
+        ? SoundpadStatus.waiting
+        : SoundpadStatus.failed,
+      lastErrorMessage: "",
+      artistAndSongBeingPlayed: "",
+      artistAndSongBeingDownloaded: "",
+      songDownloadPath: getSongDownloadPath(),
+    };
+
+    console.debug("Initial state", initialState);
+
+    publish("new-state", {
+      state: initialState,
+    });
   });
 };
