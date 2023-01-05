@@ -1,3 +1,8 @@
+# 1.0.0
+
+- added GUI
+- fixed crash when Soundpad fails to connect
+
 # 0.0.6
 
 - fixed space in command

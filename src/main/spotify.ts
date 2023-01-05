@@ -1,6 +1,21 @@
 import { exec } from "child_process";
 import { sendNextTrackKey, sendPlayPauseKey } from "./windows";
 
+export const getCurrentlyPlayingArtistAndTitleOrError =
+  async (): Promise<string> => {
+    const artistAndTitle = await getCurrentlyPlayingArtistAndTitle();
+
+    if (!artistAndTitle) {
+      throw new Error("Could not detect artist and title from Spotify");
+    }
+
+    return artistAndTitle;
+  };
+
+export const connect = async (): Promise<void> => {
+  await getCurrentlyPlayingArtistAndTitleOrError();
+};
+
 export const getCurrentlyPlayingArtistAndTitle = async (): Promise<string> => {
   const result = await new Promise(
     (resolve: (mainWindowTitle: string) => void, reject) => {

@@ -1,25 +1,33 @@
 {
   "name": "spotify-to-soundpad",
-  "version": "0.0.6",
+  "author": "Jared Williams",
+  "version": "1.0.0",
   "description": "An app for synchronizing Spotify with Soundpad.",
-  "main": "index.js",
+  "main": "dist/main/index.js",
   "scripts": {
-    "start": "nodemon src/main.ts",
+    "start": "nodemon --exec \"(npm run build:main || exit 1) && npm run build:renderer && npm run start:desktop\" -e ts,tsx",
+    "start:desktop": "electron dist/main/main.js",
     "build:cs": "dotnet publish src/SendPlayPause -o bin/SendPlayPause",
-    "build:ts": "tsc",
-    "build:exe": "node scripts/build-exe.js",
+    "build:main": "tsc",
+    "build:renderer": "esbuild src/renderer/index.tsx --bundle --outfile=dist/renderer/index.js && (xcopy \"public\\index.html\" \"dist\\renderer\\index.html*\" /Y)",
     "copyassets": "node scripts/copyassets.js",
-    "build": "npm run build:cs && npm run build:ts && npm run build:exe && npm run copyassets"
+    "build": "npm run build:cs && npm run build:main && npm run build:renderer",
+    "package": "electron-builder --win portable"
   },
-  "author": "",
   "license": "ISC",
   "devDependencies": {
     "@babel/register": "^7.17.7",
+    "@nodegui/packer": "^1.5.0",
     "@types/express": "^4.17.13",
+    "@types/react": "^16.14.34",
+    "@types/react-dom": "^18.0.10",
     "@types/request": "^2.48.8",
     "@types/xml2js": "^0.4.11",
     "@types/yargs": "^17.0.10",
     "archiver": "^5.3.1",
+    "electron": "^22.0.0",
+    "electron-builder": "^23.6.0",
+    "esbuild": "0.16.14",
     "nexe": "^4.0.0-rc.1",
     "prettier": "^2.6.2",
     "ts-node": "^10.8.0",
@@ -27,13 +35,38 @@
   },
   "dependencies": {
     "dotenv": "^16.0.1",
+    "electron-debug": "^3.2.0",
+    "electron-log": "^4.4.8",
     "express": "^4.18.1",
     "nodemon": "^2.0.16",
     "open": "^8.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-error-boundary": "^3.1.4",
     "request": "^2.88.2",
     "soundpad": "github:mcpe-pc/soundpad.js",
     "xml2js": "^0.4.23",
     "yargs": "^17.5.1",
     "youtube-dl-exec": "^2.0.12"
+  },
+  "nodemonConfig": {
+    "env": {
+      "NODE_ENV": "development"
+    }
+  },
+  "build": {
+    "files": [
+      "bin",
+      "dist"
+    ],
+    "compression": "store",
+    "directories": {
+      "output": "release",
+      "buildResources": "assets"
+    },
+    "asar": false,
+    "win": {
+      "target": "portable"
+    }
   }
 }

@@ -1,8 +1,12 @@
 {
     "extends": "@tsconfig/node16/tsconfig.json",
     "compilerOptions": {
-        "outDir": "dist"
+        "outDir": "dist/main",
+        "resolveJsonModule": true,
+        "jsx": "react",
+        "rootDir": "./src/main",
+        "lib": ["dom"]
     },
-    "include": ["src"],
+    "include": ["src/main/**/*"],
     "exclude": ["node_modules"]
   }

@@ -4,10 +4,10 @@ import path from "path";
 // no way to do this natively in nodejs so we have a c# app for it
 export const sendCommand = async (command: string): Promise<void> => {
   await new Promise((resolve, reject) => {
-    const binaryPath =
-      process.env.NODE_ENV === "development"
-        ? path.resolve(__dirname, "../bin/SendPlayPause/SendPlayPause.exe")
-        : path.resolve("./bin/SendPlayPause/SendPlayPause.exe");
+    const binaryPath = path.resolve(
+      __dirname,
+      "../../bin/SendPlayPause/SendPlayPause.exe"
+    );
 
     exec(
       `& "${binaryPath}" ${command}`,

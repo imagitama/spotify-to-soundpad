@@ -48,10 +48,6 @@ const sendRequest = async <TResult>(request: string): Promise<TResult> => {
     pipe.write(request);
 
     pipe.once("data", (buffer) => {
-      //   if (request !== "GetSoundlist()") {
-      // console.debug(`sendRequest ${request} ${buffer.toString()}`);
-      //   }
-
       const stringResult = buffer.toString();
 
       if (stringResult[0] === "<") {
