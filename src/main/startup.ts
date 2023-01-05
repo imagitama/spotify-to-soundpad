@@ -199,7 +199,7 @@ const start = async () => {
       console.error(err);
       handleError(err as Error);
     }
-  }, 500);
+  }, 1000);
 
   syncWithSoundpad();
 };
@@ -240,10 +240,37 @@ const syncWithSoundpad = async () => {
   }
 };
 
+const startIfPossible = async () => {
+  if (!getIsConnectedToSoundpad()) {
+    console.debug("Cannot start - not connected to Soundpad!");
+    return;
+  }
+
+  if (!(await getIsConnectedToSpotify())) {
+    console.debug("Cannot start - not connected to Spotify!");
+    return;
+  }
+
+  await start();
+};
+
 export default () => {
-  subscribe("setup-and-start", async () => {
+  subscribe("setup-spotify", async () => {
     try {
-      await setupAndStart();
+      await setupSpotify();
+
+      await startIfPossible();
+    } catch (err) {
+      console.error(err);
+      handleError(err as Error);
+    }
+  });
+
+  subscribe("setup-soundpad", async () => {
+    try {
+      await setupSoundpad();
+
+      await startIfPossible();
     } catch (err) {
       console.error(err);
       handleError(err as Error);

@@ -1,3 +1,7 @@
+# 1.1.1
+
+- improved reliability of Soundpad
+
 # 1.1.0
 
 - added auto-pause toggle

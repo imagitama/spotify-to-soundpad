@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { state, subscribe } from "./store";
-import { setupAndStart } from "./startup";
+import { setupSpotify, setupSoundpad } from "./startup";
 import { getAppVersion } from "./app-stuff";
 import { publish } from "./ipc";
-import { State, SpotifyStatus, SoundpadStatus, Status } from "../shared/store";
+import { SpotifyStatus, SoundpadStatus, Status } from "../shared/store";
 
-const retrySetup = async () => {
+const retrySpotifyConnection = async () => {
   try {
-    console.debug(`Retrying setup...`);
-    await setupAndStart();
+    console.debug(`Retrying Spotify setup...`);
+    await setupSpotify();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const retrySoundpadConnection = async () => {
+  try {
+    console.debug(`Retrying Soundpad setup...`);
+    await setupSoundpad();
   } catch (err) {
     console.error(err);
   }
@@ -186,20 +195,20 @@ const Button = ({
 const Heading = ({
   children,
 }: {
-  children: string | number | Array<string | number>;
+  children: React.ReactChild | React.ReactChild[];
 }) => <Text id="heading">{children}</Text>;
 
 const Label = ({
   children,
 }: {
-  children: string | number | Array<string | number>;
+  children: React.ReactChild | React.ReactChild[];
 }) => <Text id="label">{children}</Text>;
 
 const Value = ({
   children,
   status,
 }: {
-  children: string | number | Array<string | number>;
+  children: React.ReactChild | React.ReactChild[];
   status: ValueStatus;
 }) => <Text id={`value-${status}`}>{children}</Text>;
 
@@ -232,25 +241,27 @@ const App = () => {
         <Label>Spotify</Label>
         <Value status={getValueStatusForSpotifyConnection()}>
           {getSpotifyConnectionStatusLabel()}
+          {state.spotifyStatus === SpotifyStatus.not_detected ? (
+            <Button onClick={() => retrySpotifyConnection()}>Retry</Button>
+          ) : (
+            <></>
+          )}
         </Value>
       </Row>
       <Row>
         <Label>Soundpad</Label>
         <Value status={getValueStatusForSoundpadConnection()}>
           {getSoundpadConnectionStatusLabel()}
+          {state.soundpadStatus === SoundpadStatus.failed ? (
+            <Button onClick={() => retrySoundpadConnection()}>Retry</Button>
+          ) : (
+            <></>
+          )}
         </Value>
       </Row>
       <Row>
         <Label>Status</Label>
         <Value status={getValueStatusForStatus()}>{getStatusAsLabel()}</Value>
-      </Row>
-      <Row>
-        {state.soundpadStatus === SoundpadStatus.failed ||
-        state.spotifyStatus === SpotifyStatus.not_detected ? (
-          <Button onClick={() => retrySetup()}>Retry</Button>
-        ) : (
-          <></>
-        )}
       </Row>
       <Row>
         <input

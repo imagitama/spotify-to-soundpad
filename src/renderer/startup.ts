@@ -1,6 +1,11 @@
 import { publish } from "./ipc";
 
-export const setupAndStart = async () => {
-  console.debug(`Informing main process to setup and start...`);
-  publish("setup-and-start", null);
+export const setupSpotify = async () => {
+  console.debug(`Informing main process to setup Spotify...`);
+  publish("setup-spotify", null);
+};
+
+export const setupSoundpad = async () => {
+  console.debug(`Informing main process to setup Soundpad...`);
+  publish("setup-soundpad", null);
 };
