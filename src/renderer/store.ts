@@ -1,35 +1,5 @@
 import { subscribe as subscribeWithIpc } from "./ipc";
-
-export enum SpotifyStatus {
-  waiting,
-  not_detected,
-  detected,
-}
-
-export enum SoundpadStatus {
-  waiting,
-  connecting,
-  connected,
-  failed,
-}
-
-export enum Status {
-  waiting,
-  starting_up,
-  downloading_song,
-  playing_song,
-  error,
-}
-
-export interface State {
-  spotifyStatus?: SpotifyStatus;
-  soundpadStatus?: SoundpadStatus;
-  status?: Status;
-  lastErrorMessage?: string;
-  artistAndSongBeingPlayed?: string;
-  artistAndSongBeingDownloaded?: string;
-  songDownloadPath?: string;
-}
+import { State, SpotifyStatus, SoundpadStatus, Status } from "../shared/store";
 
 type Callback = (state: State) => void;
 
@@ -46,6 +16,7 @@ export let state: State = {
   artistAndSongBeingPlayed: "",
   artistAndSongBeingDownloaded: "",
   songDownloadPath: "",
+  isAutoPauseEnabled: true,
 };
 
 const subscribers: SubscriberInfo[] = [];

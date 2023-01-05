@@ -33,6 +33,6 @@ In spotify go to settings and uncheck "Show desktop overlay when using media key
 
 # Ideas
 
-- pre-download songs such as in a playlist to avoid delay
+- pre-download songs such as in a playlist
 - fade between songs
 - normalise volume level (some youtube songs are super quiet)

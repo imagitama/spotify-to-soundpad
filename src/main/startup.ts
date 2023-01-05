@@ -27,6 +27,7 @@ import {
 import { getIfFileExists } from "./utils";
 import { handleError } from "./errors";
 import { publish, subscribe } from "./ipc";
+import { getIsAutoPauseEnabled, setIsAutoPauseEnabled } from "./config";
 
 export const setupAndStart = async () => {
   try {
@@ -161,7 +162,11 @@ const syncWithSpotify = async () => {
 
     try {
       await pauseSpotify();
-      await pauseSoundpad();
+
+      if (getIsAutoPauseEnabled()) {
+        await pauseSoundpad();
+      }
+
       await playNewSong(lastKnownArtistAndTitle);
 
       isQueuingNextSong = false;
@@ -261,12 +266,25 @@ export default () => {
       artistAndSongBeingPlayed: "",
       artistAndSongBeingDownloaded: "",
       songDownloadPath: getSongDownloadPath(),
+      isAutoPauseEnabled: getIsAutoPauseEnabled(),
     };
 
     console.debug("Initial state", initialState);
 
     publish("new-state", {
       state: initialState,
+    });
+  });
+
+  subscribe("toggle-auto-pause", () => {
+    const currentVal = getIsAutoPauseEnabled();
+    const newVal = !currentVal;
+    setIsAutoPauseEnabled(newVal);
+
+    publish("new-state", {
+      state: {
+        isAutoPauseEnabled: newVal,
+      },
     });
   });
 };

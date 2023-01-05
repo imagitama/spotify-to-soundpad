@@ -1,3 +1,7 @@
+# 1.1.0
+
+- added auto-pause toggle
+
 # 1.0.0
 
 - added GUI

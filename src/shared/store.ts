@@ -27,4 +27,5 @@ export interface State {
   artistAndSongBeingPlayed?: string;
   artistAndSongBeingDownloaded?: string;
   songDownloadPath?: string;
+  isAutoPauseEnabled?: boolean;
 }

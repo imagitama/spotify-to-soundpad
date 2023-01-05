@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from "react";
-import {
-  SoundpadStatus,
-  SpotifyStatus,
-  state,
-  Status,
-  subscribe,
-} from "./store";
+import { state, subscribe } from "./store";
 import { setupAndStart } from "./startup";
 import { getAppVersion } from "./app-stuff";
 import { publish } from "./ipc";
+import { State, SpotifyStatus, SoundpadStatus, Status } from "../shared/store";
 
 const retrySetup = async () => {
   try {
     console.debug(`Retrying setup...`);
     await setupAndStart();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const toggleAutoPause = async () => {
+  try {
+    console.debug(`Toggling auto-pause...`);
+    publish("toggle-auto-pause", {});
   } catch (err) {
     console.error(err);
   }
@@ -247,6 +251,14 @@ const App = () => {
         ) : (
           <></>
         )}
+      </Row>
+      <Row>
+        <input
+          type="checkbox"
+          checked={state.isAutoPauseEnabled}
+          onChange={(e) => toggleAutoPause()}
+        />{" "}
+        Automatically pause Soundpad on new song
       </Row>
       <View id="footer">
         <Text>
