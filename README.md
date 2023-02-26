@@ -1,3 +1,5 @@
+**NOTE: I am aware this software sometimes reports an error randomly that it failed to download or play a song. I am investigating.**
+
 # Spotify to Soundpad
 
 **You must have Soundpad and Spotify running BEFORE launching this software!**
