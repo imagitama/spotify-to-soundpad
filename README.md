@@ -1,4 +1,4 @@
-**NOTE: I am aware this software sometimes reports an error randomly that it failed to download or play a song. I am investigating.**
+**NOTE: This package is no longer maintained - please fork it to fix up any issues**
 
 # Spotify to Soundpad
 
